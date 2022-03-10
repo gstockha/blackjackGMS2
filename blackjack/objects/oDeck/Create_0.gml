@@ -1,17 +1,13 @@
 deck = ds_grid_create(3,52); //value, suit, sprite
-function createDeck(){
-	var values = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
-	var suits = ["spades", "diamonds", "clubs", "hearts"];
-	var index = 0;
-	for (var i = 0; i < 4; i++){
-		for (var c = 0; c < 13; c++){
-			ds_grid_set(deck,0,index,values[c]);
-			ds_grid_set(deck,1,index,suits[i]);
-			//add sprite here
-			index ++;
-		}
-	}
-	shuffleDeck();
+hand = ds_grid_create(4,0); //value, suit, sprite, faceup
+dealerHand = ds_grid_create(4,0);
+total = 0;
+dealerTotal = 0;
+state = states.play;
+enum states{
+	play,
+	win,
+	lose
 }
 function shuffleDeck(){
 	randomize();
@@ -38,7 +34,7 @@ function shuffleDeck(){
 		ds_grid_set(deck,0,i,ds_grid_get(tempDeck,0,i)); //value
 		ds_grid_set(deck,1,i,ds_grid_get(tempDeck,1,i)); //suit
 		ds_grid_set(deck,2,i,ds_grid_get(tempDeck,2,i)); //sprite
-		show_debug_message(string(ds_grid_get(deck,0,i)) + " " + string(ds_grid_get(deck,1,i)));
+		//show_debug_message(string(ds_grid_get(deck,0,i)) + " " + string(ds_grid_get(deck,1,i)));
 	}
 	ds_grid_destroy(tempDeck); //destroy the temporary shuffle deck
 }
@@ -80,22 +76,69 @@ function dealCard(_toPlayer,_faceUp){
 		dealerTotal = tempTotal
 	}
 	ds_grid_resize(deck,3,ds_grid_height(deck)-1); //remove top card
-	bust = (tempTotal > 21);
 }
-function gameState(){
-	//determine to end game or keep playing
-	//if keep playing, present player with options
-	//else payout
+function gameState(_state){
+	if (_state == "player"){ //player option
+		if (total > 21){ //lose
+			state = states.lose;
+			show_debug_message("Bust! Left click to play again");
+		}
+		else{
+			if (ds_grid_height(hand) > 1) var str = "Your card(s) are ";
+			else var str = "Your card is ";
+			for (var i = 0; i < ds_grid_height(hand); i++){
+				if (i != 0) str += ", ";
+				str += ds_grid_get(hand,0,i);
+			}
+			str += "(" + string(total) + ")";
+			show_debug_message(str);
+			show_debug_message("The dealer's card is " + ds_grid_get(dealerHand,0,0));
+			if (total != 21){
+				state = states.play;
+				show_debug_message("Left click to hit, Right click to stand");
+			}
+			else{
+				show_debug_message("Blackjack!");
+				gameState("dealer");
+			}
+		}
+	}
+	else if (_state == "dealer"){ //dealer option
+		while (dealerTotal <= total && dealerTotal < 21) dealCard(false, true);
+		if (dealerTotal < 22){
+			if (dealerTotal != total){
+				state = states.lose;
+				show_debug_message("You lose! Left click to play again");	
+			}
+			else{
+				state = states.win;
+				show_debug_message("You win! Left click to play again");	
+			}
+		}
+	}
 }
-
-createDeck();
-
-hand = ds_grid_create(4,0); //value, suit, sprite, faceup
-dealerHand = ds_grid_create(4,0);
-bust = false;
-total = 0;
-dealerTotal = 0;
-
+function startGame(_fresh, _win){
+	if (_fresh == false){
+		total = 0;
+		dealerTotal = 0;
+	}
+	var values = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+	var suits = ["spades", "diamonds", "clubs", "hearts"];
+	var index = 0;
+	for (var i = 0; i < 4; i++){
+		for (var c = 0; c < 13; c++){
+			ds_grid_set(deck,0,index,values[c]);
+			ds_grid_set(deck,1,index,suits[i]);
+			//add sprite here
+			index ++;
+		}
+	}
+	shuffleDeck();
+	dealCard(true,true);
+	dealCard(false,true);
+	gameState("player");
+}
+startGame(true, false);
 
 reswidth = display_get_gui_width();
 resheight = display_get_gui_height();
