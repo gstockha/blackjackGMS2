@@ -124,7 +124,7 @@ function gameState(_state){
 		}
 		else{
 			state = states.lose;
-			show_debug_message("Bust! Left click to play again");	
+			show_debug_message("Bust! Left click to play again");
 		}
 	}
 	else if (_state == "dealer"){ //dealer option
@@ -144,15 +144,14 @@ function gameState(_state){
 			show_debug_message("The dealer busted! You win! Left click to play again");
 		}
 	}
-	if (state != states.play){
+	if (state == states.win || state == states.tie){
 		if (state == states.win) bet *= 2;
-		else if (state == states.lose) bet *= -1;
 		chips += bet;
 		bet = 0;
 	}
 }
 function startGame(_init){
-	alarm[0] = 60;
+	alarm[0] = 30;
 	if (_init == false){
 		total = 0;
 		dealerTotal = 0;

@@ -28,7 +28,7 @@ else if keyboard_check_pressed(vk_space){
 		gameState("player");
 	}
 	else if (state == states.play && ds_grid_height(hand) < 3){
-		if ((bet * 2) > chips){
+		if (bet > chips){
 			show_debug_message("Not enough chips to double down!");
 			exit;
 		}
@@ -37,7 +37,8 @@ else if keyboard_check_pressed(vk_space){
 		doubledown = true;
 		show_debug_message("Double down!");
 		dealCard(true,true);
-		gameState("dealer");
+		if (total > 21) gameState("player");
+		else gameState("dealer");
 	}
 }
 else if mouse_check_button(mb_left){
